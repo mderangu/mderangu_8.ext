@@ -1,0 +1,168 @@
+---
+title: "Mderangu_DEA"
+output:
+  word_document: default
+  html_document: default
+date: "2024-10-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library("Benchmarking")
+
+# Define facility names as a character vector
+facility_names <- c("Facility 1", "Facility 2", "Facility 3", "Facility 4", "Facility 5", "Facility 6")
+
+# Input Data for the Six Facilities
+staff_hours <- c(150, 400, 320, 520, 350, 320)  # Staffing Labor (hours per day)
+supplies <- c(0.2, 0.7, 1.2, 2.0, 1.2, 0.7)    # Cost of Supplies (thousands of dollars per day)
+
+# Output Data
+reimbursed_patient_days <- c(14000, 14000, 42000, 28000, 19000, 14000)  # Reimbursed by third-party
+privately_paid_days <- c(3500, 21000, 10500, 42000, 25000, 15000)       # Privately paid patient-days
+
+# Prepare input and output matrices
+x <- matrix(c(staff_hours, supplies), ncol=2)   # Inputs: Staff hours and supplies
+y <- matrix(c(reimbursed_patient_days, privately_paid_days), ncol=2)  # Outputs: Patient-days
+
+# Set column names for clarity
+colnames(x) <- c("Staff_Hours_Per_Day", "Supplies_Per_Day")
+colnames(y) <- c("Reimbursed_Patient_Days", "Privately_Paid_Patient_Days")
+
+combined_data <- data.frame(DMU = facility_names, x, y)
+combined_data
+
+# Perform DEA under Constant Returns to Scale (CRS)
+DEA_CRS <- dea(x, y, RTS = "crs")
+
+# Print DEA CRS Results
+print("DEA CRS Results:")
+print(DEA_CRS)
+
+# Print peers for CRS
+print("Peers for CRS:")
+print(peers(DEA_CRS))
+
+# Print lambdas for CRS
+print("Lambdas for CRS:")
+print(lambda(DEA_CRS))
+
+# DEA under Variable Returns to Scale (VRS)
+DEA_VRS <- dea(x, y, RTS = "vrs")  # Perform DEA with VRS assumption
+print("DEA VRS Results:")  # Print VRS results
+print(DEA_VRS)
+
+print("Peers for VRS:")  # Print peers for VRS
+print(peers(DEA_VRS))
+
+print("Lambdas for VRS:")  # Print lambda values for VRS
+print(lambda(DEA_VRS))
+
+# DEA under Decreasing Returns to Scale (DRS)
+DEA_DRS <- dea(x, y, RTS = "drs")  # Perform DEA with DRS assumption
+print("DEA DRS Results:")  # Print DRS results
+print(DEA_DRS)
+
+print("Peers for DRS:")  # Print peers for DRS
+print(peers(DEA_DRS))
+
+print("Lambdas for DRS:")  # Print lambda values for DRS
+print(lambda(DEA_DRS))
+
+# DEA under Increasing Returns to Scale (IRS)
+DEA_IRS <- dea(x, y, RTS = "irs")  # Perform DEA with IRS assumption
+print("DEA IRS Results:")  # Print IRS results
+print(DEA_IRS)
+
+print("Peers for IRS:")  # Print peers for IRS
+print(peers(DEA_IRS))
+
+print("Lambdas for IRS:")  # Print lambda values for IRS
+print(lambda(DEA_IRS))
+
+# DEA under Free Disposability Hull (FDH)
+DEA_FDH <- dea(x, y, RTS = "fdh")  # Perform DEA with FDH assumption
+print("DEA FDH Results:")  # Print FDH results
+print(DEA_FDH)
+
+print("Peers for FDH:")  # Print peers for FDH
+print(peers(DEA_FDH))
+
+print("Lambdas for FDH:")  # Print lambda values for FDH
+print(lambda(DEA_FDH))
+
+# DEA under Free Replicability Hull (FRH)
+DEA_FRH <- dea(x, y, RTS = "add")  # Perform DEA with FRH assumption
+print("DEA FRH Results:")  # Print FRH results
+print(DEA_FRH)
+
+print("Peers for FRH:")  # Print peers for FRH
+print(peers(DEA_FRH))
+
+print("Lambdas for FRH:")  # Print lambda values for FRH
+print(lambda(DEA_FRH))
+
+##Peers and lambdas: Peers refer to the other DMUs that serve as benchmarks for a given facility's performance. When a facility is identified as inefficient (i.e., its efficiency score is less than 1), its peers are the facilities that demonstrate similar inputs and outputs but achieve higher efficiency scores. By examining peers, a facility can identify best practices, strategies, and operational adjustments that could improve its own performance. Lambdas are the weights assigned to the peers of a DMU in the DEA model. They quantify how much each peer contributes to the efficiency score of the DMU in question. A lambda value greater than zero indicates that the peer is contributing to the efficiency assessment of the inefficient DMU.
+
+# Summarizing the efficiency results in a data frame
+results <- data.frame(
+  Facility = c("Facility 1", "Facility 2", "Facility 3", "Facility 4", "Facility 5", "Facility 6"),
+  CRS_Efficiency = DEA_CRS$eff,  # Efficiency results from CRS DEA
+  VRS_Efficiency = DEA_VRS$eff,  # Efficiency results from VRS DEA
+  DRS_Efficiency = DEA_DRS$eff,  # Efficiency results from DRS DEA
+  IRS_Efficiency = DEA_IRS$eff,  # Efficiency results from IRS DEA
+  FDH_Efficiency = DEA_FDH$eff,  # Efficiency results from FDH DEA
+  FRH_Efficiency = DEA_FRH$eff   # Efficiency results from FRH DEA
+)
+
+# Print summary of efficiency results
+print("Summary of Efficiency Results:")
+print(results)
+
+##High Efficiency Across Most Facilities: The efficiency scores indicate that Facilities 1, 2, 3, and 4 achieve perfect efficiency (1.0000) across all DEA models. This suggests that these facilities are operating at optimal levels, effectively utilizing their inputs (staff hours and supply costs) to maximize patient-days, both reimbursed and privately paid.
+
+##Moderate Efficiency for Facility 5: Facility 5 exhibits high efficiency under CRS (0.9775) and DRS (0.9775) but achieves perfect efficiency under VRS and IRS. This discrepancy may indicate that while the facility operates efficiently within its current scale, it may benefit from adjustments in scale or operational practices to enhance its efficiency further.
+
+##Lowest Efficiency for Facility 6: Facility 6 demonstrates the lowest efficiency scores across several models, particularly in CRS (0.8675) and VRS (0.8963). This indicates potential operational inefficiencies and suggests that the facility may need to investigate areas such as staffing levels, supply chain management, or service delivery practices to improve its performance.
+
+##Uniform Performance Under FDH and FRH: All facilities achieve perfect efficiency (1.0000) under both FDH and FRH models. This implies that regardless of the assumption regarding returns to scale, all facilities can produce at least the same output with their given inputs, reinforcing the idea that inefficiencies may be scale-related rather than absolute in nature.
+
+dea.plot(x, y, RTS = "crs")
+
+# DEA Plot under Constant Returns to Scale (CRS)
+dea.plot(x, y, RTS='crs')
+
+##This plot illustrates the efficiency frontier assuming that increasing inputs will result in a proportional increase in outputs. It helps identify DMUs that maximize their efficiency under this assumption.
+
+# DEA Plot under Free Replicability Hull (FRH)
+dea.plot(x, y, RTS='add')  # 'add' specifies FRH in the Benchmarking package
+
+##The FRH plot shows how DMUs can achieve efficiency when inputs can be freely replicated. It highlights the optimal combinations of inputs that lead to efficient output levels, useful for understanding scalability.
+
+# DEA Plot under Free Disposability Hull (FDH)
+dea.plot(x, y, RTS='fdh')
+
+##This plot reflects the concept that outputs can be freely disposed of without affecting input levels. It identifies efficient DMUs and visualizes their performance based on the available resources.
+
+# DEA Plot under Variable Returns to Scale (VRS)
+dea.plot(x, y, RTS='vrs')
+
+##The VRS plot shows the efficiency frontier when the relationship between inputs and outputs is not constant. It provides insights into how DMUs perform under varying scales of operation.
+
+# DEA Plot under Increasing Returns to Scale (IRS)
+dea.plot(x, y, RTS='irs')
+
+##This plot indicates that as inputs increase, outputs increase at an increasing rate. It helps identify DMUs that could benefit from expanding operations to improve efficiency.
+
+# DEA Plot under Decreasing Returns to Scale (DRS)
+dea.plot(x, y, RTS='drs')
+
+##The DRS plot illustrates a situation where increasing inputs leads to a less-than-proportional increase in outputs. It highlights DMUs that may be overextending their resources.
+
+##The DEA analysis provides a robust framework for assessing operational efficiency within healthcare settings. The findings suggest that while many facilities operate efficiently, targeted interventions are necessary for those that do not. Continuous monitoring and improvement strategies should be implemented to maintain high standards of care and resource utilization in nursing homes. This analysis not only serves as a tool for accountability but also as a guide for future investments in operational improvements and resource allocation.
+
+```
